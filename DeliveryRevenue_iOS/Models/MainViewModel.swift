@@ -66,37 +66,45 @@ class MainViewModel: ObservableObject {
         Task {
             var processedItems: [ImageItem] = []
             
+            // 逐張處理圖片
             for item in self.imageItems {
                 var mutableItem = item
-                do {
-                    let (amounts, rawText) = try await OcrProcessor.extractAmounts(from: item.image)
-                    mutableItem.extractedAmounts = amounts
-                    mutableItem.rawText = rawText
-                    mutableItem.isProcessed = true
-                    mutableItem.error = amounts.isEmpty ? "未偵測到金額" : nil
-                } catch {
-                    mutableItem.isProcessed = true
-                    mutableItem.error = error.localizedDescription
+                
+                // 🚀 效能大躍進：只有當這張圖片「還沒被辨識過」時，才執行耗時的 OCR 運算
+                if !mutableItem.isProcessed {
+                    do {
+                        let (amounts, rawText) = try await OcrProcessor.extractAmounts(from: mutableItem.image)
+                        // 讓 Xcode 把原始文字印在底部的黑色除錯視窗
+                        print("==== 圖片 OCR 原始文字 ====")
+                        print(rawText)
+                        mutableItem.extractedAmounts = amounts
+                        mutableItem.rawText = rawText
+                        mutableItem.isProcessed = true
+                        mutableItem.error = amounts.isEmpty ? "未偵測到金額" : nil
+                    } catch {
+                        mutableItem.isProcessed = true
+                        mutableItem.error = error.localizedDescription
+                    }
                 }
                 processedItems.append(mutableItem)
             }
             
             self.imageItems = processedItems
             
+            // 計算總金額與總筆數
             let total = processedItems.flatMap { $0.extractedAmounts }.reduce(0, +)
             let totalCount = processedItems.reduce(0) { $0 + $1.extractedAmounts.count }
             
-            // 抓取所有圖片的日期
             let dates = Set(processedItems.compactMap { $0.date })
             let hasConflict = dates.count > 1
-            let primaryDate = hasConflict ? nil : dates.first // 如果沒衝突，且有找到日期，就作為主要日期
+            let primaryDate = hasConflict ? nil : dates.first
             
             let details = processedItems.map { "• 圖片: \($0.date ?? "無日期資訊")" }.joined(separator: "\n")
             
             self.appState = .done(
                 totalAmount: total,
                 totalTransactionCount: totalCount,
-                primaryDate: primaryDate, // 這裡可能會是 nil
+                primaryDate: primaryDate,
                 hasConflict: hasConflict,
                 details: details
             )

@@ -85,8 +85,8 @@ class OcrProcessor {
             elements.append(element)
         }
         
-        // 忽略大小寫尋找 panda 或 eats
-        guard let platformRegex = try? NSRegularExpression(pattern: "(?i)(panda|eats)") else { return [] }
+        // 忽略大小寫，擴大外送平台的特徵字根 (加入 uber 與 food，完美攔截 UberBats 這種錯字)
+        guard let platformRegex = try? NSRegularExpression(pattern: "(?i)(panda|eats|uber|food)") else { return [] }
         
         // 1. 找出所有「外送平台名稱」的單字座標當作錨點
         let platformElements = elements.filter { el in

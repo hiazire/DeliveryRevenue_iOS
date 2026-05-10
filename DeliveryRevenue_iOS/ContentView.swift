@@ -88,7 +88,7 @@ struct ContentView: View {
             ScrollView {
                 LazyVStack(spacing: 15) {
                     ForEach(viewModel.imageItems) { item in
-                        ImageRow(item: item) {
+                        ImageRow(item: item, isProcessing: viewModel.appState == .processing) {
                             viewModel.removeImage(id: item.id)
                         }
                     }
@@ -106,24 +106,53 @@ struct ContentView: View {
                 summaryCard(total: total, count: count, detectedDate: date)
             }
             
-            // 動作按鈕
-            HStack(spacing: 15) {
+            // 動作按鈕：三分天下 (新增 / 辨識 / 清除)
+            HStack(spacing: 10) {
+                // 1. 新增圖片
                 PhotosPicker(selection: $selectedItems, matching: .images) {
                     HStack {
                         Image(systemName: "plus")
-                        Text("新增圖片")
+                        Text("新增")
                     }
                     .frame(maxWidth: .infinity)
-                    .padding()
+                    .padding(.vertical, 15)
                     .background(Color(white: 0.1))
                     .foregroundColor(accentOrange)
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(accentOrange, lineWidth: 1))
                 }
                 
+                // 2. 辨識按鈕 (只要有圖片，就顯示)
+                if !viewModel.imageItems.isEmpty {
+                    Button(action: {
+                        viewModel.processImages()
+                    }) {
+                        HStack {
+                            if viewModel.appState == .processing {
+                                ProgressView().tint(.white)
+                            } else {
+                                Image(systemName: "text.viewfinder")
+                                Text("辨識")
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 15)
+                        // 如果正在處理，或者是所有圖片都處理完了，按鈕變灰色
+                        .background(viewModel.appState == .processing || viewModel.imageItems.allSatisfy { $0.isProcessed } ? Color.gray : mainPurple)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                    }
+                    // 防止重複點擊
+                    .disabled(viewModel.appState == .processing || viewModel.imageItems.allSatisfy { $0.isProcessed })
+                }
+                
+                // 3. 垃圾桶 (清除全部)
                 Button(action: { viewModel.clearAll() }) {
                     Image(systemName: "trash")
-                        .padding()
+                        .padding(.horizontal, 15)
+                        .padding(.vertical, 15)
                         .foregroundColor(.red)
+                        .background(Color(white: 0.1))
+                        .cornerRadius(12)
                 }
             }
         }
@@ -212,7 +241,6 @@ struct ContentView: View {
                     if let data = data, let uiImage = UIImage(data: data) {
                         DispatchQueue.main.async {
                             viewModel.addImage(image: uiImage, imageData: data)
-                            viewModel.processImages()
                         }
                     }
                 case .failure: break
@@ -236,6 +264,7 @@ struct ContentView: View {
     // 圖片卡片組件
     struct ImageRow: View {
         let item: ImageItem
+        let isProcessing: Bool // 新增這個變數來接收狀態
         let onDelete: () -> Void
         
         var body: some View {
@@ -248,7 +277,7 @@ struct ContentView: View {
                     .clipped()
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(item.date ?? "讀取中...")
+                    Text(item.date ?? "未知日期")
                         .font(.subheadline)
                         .foregroundColor(.white)
                     
@@ -260,8 +289,12 @@ struct ContentView: View {
                                 .font(.caption)
                                 .foregroundColor(.green)
                         }
-                    } else {
+                    } else if isProcessing {
+                        // 如果整體正在運算中，才顯示轉圈圈
                         ProgressView().tint(.gray)
+                    } else {
+                        // 剛選進來的時候，顯示文字狀態
+                        Text("等待辨識").font(.caption).foregroundColor(.gray)
                     }
                 }
                 
