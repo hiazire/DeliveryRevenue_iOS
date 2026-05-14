@@ -13,9 +13,11 @@ struct SidebarView: View {
                 Image(systemName: "house.fill")
                     .font(.largeTitle)
                     .foregroundColor(mainPurple)
-                Text("E-Yu Workshop") // 你的工作室名稱
+                    .frame(maxWidth: .infinity, alignment: .center)
+                Text("q8js") // 你的工作室名稱
                     .font(.headline)
                     .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
             .padding(.top, 50)
             .padding(.horizontal)
@@ -43,7 +45,7 @@ struct SidebarView: View {
             }
             
             Spacer()
-                Text("DR_26may14_1_hermes")
+                Text("DRiOS_26may14_2_rabi")
                     .font(.caption2)
                     .foregroundColor(.gray)
                     .frame(maxWidth: .infinity, alignment: .center)

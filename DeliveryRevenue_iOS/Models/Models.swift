@@ -4,7 +4,6 @@
 //
 //  Created by rabisu on 2026/5/9.
 //
-//
 
 import Foundation
 import UIKit
@@ -20,16 +19,16 @@ struct AppSettings: Codable {
 struct ImageItem: Identifiable {
     let id = UUID()                     // 給 SwiftUI 列表用的唯一識別碼
     let image: UIImage                  // 實際的照片檔案
-    
+
     // OCR 辨識結果
     let date: String?                   // 抓出來的日期
     var extractedAmounts: [Double] = [] // 抓出來的金額陣列
     var rawText: String = ""            // 原始辨識文字 (除錯用)
-    
+
     // 處理狀態
     var isProcessed: Bool = false       // 是否已經執行過辨識
     var error: String? = nil            // 錯誤訊息 (如果有的話)
-    
+
     // 相簿管理 (一鍵刪除功能使用)
     var assetIdentifier: String? = nil  // 用來記錄照片在相簿裡的身分證字號
 }
@@ -51,9 +50,9 @@ enum EmailState: Equatable {
 
 // 新增：App 功能清單
 enum AppFeature: String, CaseIterable {
-    case unrecordedTotal = "未入機加總"
     case dailyReport = "日營業額回報"
-    
+    case unrecordedTotal = "未入機加總"
+
     var icon: String {
         switch self {
         case .unrecordedTotal: return "plus.viewfinder"

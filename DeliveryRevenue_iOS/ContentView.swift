@@ -1,9 +1,12 @@
+// create by rabisu
+
 import SwiftUI
 
 struct ContentView: View {
     @StateObject private var sharedViewModel = MainViewModel()
     @State private var isMenuOpen = false
-    @State private var selectedFeature: AppFeature = .unrecordedTotal
+    @State private var selectedFeature: AppFeature = .dailyReport
+    // 第一個畫面為日營業額回報，而非未入機加總 .unrecordedTotal
     
     var body: some View {
         NavigationStack {
