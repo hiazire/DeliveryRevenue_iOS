@@ -1,4 +1,4 @@
-//
+//  負責執行邏輯的大腦
 //  MainViewModel.swift
 //  DeliveryRevenue_iOS
 //
@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import Photos
 
 @MainActor // 確保所有狀態更新都在主執行緒 (Main Thread)，避免畫面卡頓或崩潰
 class MainViewModel: ObservableObject {
@@ -37,11 +38,20 @@ class MainViewModel: ObservableObject {
     }
     
     // ── 圖片清單管理 ───────────────────────────────────────────
-    
-    func addImage(image: UIImage, imageData: Data) {
+    func addImage(image: UIImage, imageData: Data, assetIdentifier: String? = nil) {
+        // EXIF 日期抓取邏輯
         let date = ExifUtil.extractDate(from: imageData)
-        let newItem = ImageItem(image: image, date: date)
+        
+        // 建立 Item 時，同時帶入日期與身分證字號
+        let newItem = ImageItem(
+            image: image,
+            date: date,
+            assetIdentifier: assetIdentifier
+        )
+        
         imageItems.append(newItem)
+        
+        // 狀態重置邏輯
         appState = .idle
         emailState = .idle
     }
@@ -57,6 +67,55 @@ class MainViewModel: ObservableObject {
         emailState = .idle
     }
     
+    // 專門執行刪除的函式
+    func deleteProcessedPhotos(completion: @escaping (Bool) -> Void) {
+        // 篩選出：已經辨識完畢 (isProcessed) 且 帶有身分證 (assetIdentifier) 的項目
+        let identifiers = imageItems
+            .filter { $0.isProcessed }
+            .compactMap { $0.assetIdentifier }
+
+        guard !identifiers.isEmpty else {
+            completion(false)
+            return
+        }
+
+        // 請求權限並執行刪除
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+            guard status == .authorized || status == .limited else {
+                DispatchQueue.main.async { completion(false) }
+                return
+            }
+
+            let assetsToDelete = PHAsset.fetchAssets(withLocalIdentifiers: identifiers, options: nil)
+
+            PHPhotoLibrary.shared().performChanges({
+                PHAssetChangeRequest.deleteAssets(assetsToDelete)
+            }) { success, error in
+                DispatchQueue.main.async {
+                    if success {
+                        // 刪除成功後，記得清空 App 裡的清單
+                        self.imageItems.removeAll(where: { item in
+                            item.isProcessed && item.assetIdentifier != nil
+                        })
+                    }
+                    completion(success)
+                }
+            }
+        }
+    }
+
+    func deleteUploadedPhotosFromDevice() {
+        let ids = imageItems.compactMap { $0.assetIdentifier }
+        guard !ids.isEmpty else { return }
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { s in
+            guard s == .authorized || s == .limited else { return }
+            let assets = PHAsset.fetchAssets(withLocalIdentifiers: ids, options: nil)
+            PHPhotoLibrary.shared().performChanges({ PHAssetChangeRequest.deleteAssets(assets) }) { _, _ in
+                DispatchQueue.main.async { self.clearAll() }
+            }
+        }
+    }
+
     // ── 核心處理邏輯 ───────────────────────────────────────────
     
     func processImages() {

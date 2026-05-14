@@ -97,6 +97,7 @@
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hant",
 			);
 			mainGroup = BD5A2F9A2FAEB76E004BAB20;
 			minimizedProjectReferenceProxies = 1;
@@ -265,6 +266,9 @@
 				DEVELOPMENT_TEAM = 268SCW27GT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "DeliveryRevenue-iOS-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要權限以協助刪除已寄送的截圖，釋放手機空間。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -298,6 +302,9 @@
 				DEVELOPMENT_TEAM = 268SCW27GT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "DeliveryRevenue-iOS-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要權限以協助刪除已寄送的截圖，釋放手機空間。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
