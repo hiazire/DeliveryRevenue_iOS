@@ -26,7 +26,10 @@ struct DailyReportView: View {
     @State private var iposCash: String = ""
     @State private var registerCash: String = ""
     @State private var deliveryRevenue: String = ""
-    
+    @State private var showDuplicateAlert = false
+    @State private var actualCash: String = ""
+    @State private var shortageOrOverage: String = ""
+
     // 支出項目的動態陣列
     @State private var expenses: [ExpenseItem] = []
     
@@ -163,8 +166,12 @@ struct DailyReportView: View {
             // 區塊 4：寄送報告按鈕
             Section {
                 Button(action: {
-                    // TODO: 待串接日營業額的寄信邏輯
-                    print("準備寄送日營業額報告...")
+                    let dateKey = "SentDaily_" + reportDate.description.prefix(10)
+                    if UserDefaults.standard.bool(forKey: String(dateKey)) {
+                        showDuplicateAlert = true
+                    } else {
+                        sendReport()
+                    }
                 }) {
                     HStack {
                         Spacer()
@@ -178,11 +185,53 @@ struct DailyReportView: View {
                 .foregroundColor(.white)
             }
         }
+        .alert("您已發送過今日營業額日報，要再發送一次嗎？", isPresented: $showDuplicateAlert) {
+            Button("取消", role: .cancel) { }
+            Button("確定發送") { sendReport() }
+        }
         .scrollDismissesKeyboard(.interactively)
     }
     
     private func deleteExpense(at offsets: IndexSet) {
         expenses.remove(atOffsets: offsets)
+    }
+
+    private func sendReport() {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy/MM/dd"
+        let dateString = formatter.string(from: reportDate)
+
+        var expenseText = ""
+        for expense in expenses {
+            expenseText += "\(expense.category)：\(expense.amount)\n"
+        }
+        if expenseText.isEmpty {
+            expenseText = "無\n"
+        }
+
+        let mailBody = """
+        iPOS『營業額』：\(iposRevenue)
+        iPOS「現金」額：\(iposCash)
+        收銀機現金：\(registerCash)
+        外送未入機總額：\(importedDeliveryTotal)
+
+        【支出明細】
+        \(expenseText)
+        【結算結果】
+        實際現金：\(actualCash)
+        盤點短溢：\(shortageOrOverage)
+        """
+
+        let subject = "[\(dateString)] 日營業額回報"
+
+        if let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+           let encodedBody = mailBody.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+           let url = URL(string: "mailto:?subject=\(encodedSubject)&body=\(encodedBody)") {
+            UIApplication.shared.open(url)
+        }
+
+        let dateKey = "SentDaily_" + reportDate.description.prefix(10)
+        UserDefaults.standard.set(true, forKey: String(dateKey))
     }
 }
 
