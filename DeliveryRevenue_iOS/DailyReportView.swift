@@ -159,6 +159,24 @@ struct DailyReportView: View {
                     .onDelete(perform: deleteExpense) // 支援向左滑動刪除
                 }
             }
+
+            // 區塊 4：寄送報告按鈕
+            Section {
+                Button(action: {
+                    // TODO: 待串接日營業額的寄信邏輯
+                    print("準備寄送日營業額報告...")
+                }) {
+                    HStack {
+                        Spacer()
+                        Image(systemName: "paperplane.fill")
+                        Text("寄送報告")
+                            .font(.headline)
+                        Spacer()
+                    }
+                }
+                .listRowBackground(Color.purple)
+                .foregroundColor(.white)
+            }
         }
         .scrollDismissesKeyboard(.interactively)
     }

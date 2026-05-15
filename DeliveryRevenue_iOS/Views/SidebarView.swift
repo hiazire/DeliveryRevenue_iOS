@@ -45,7 +45,7 @@ struct SidebarView: View {
             }
             
             Spacer()
-                Text("DRiOS_26may14_2_rabi")
+                Text("DR_26may15_2_hermes")
                     .font(.caption2)
                     .foregroundColor(.gray)
                     .frame(maxWidth: .infinity, alignment: .center)
